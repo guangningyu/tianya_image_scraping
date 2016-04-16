@@ -10,7 +10,7 @@ sys.setdefaultencoding('utf-8')
 
 def scrape_page_images(base_url, page_num, output_dir, img_black_list):
 
-    print 'Dealing with page %d...' % page_num
+    print >> sys.stderr, 'Dealing with page %d...' % page_num
 
     page_url = base_url.format(str(page_num))
     soup = BeautifulSoup(requests.get(page_url).text, "lxml")
@@ -48,7 +48,7 @@ def save_image(page_url, img_url, img_path):
             img.write(img_content)
             return
     except Exception as e:
-        print '> %s cannot be saved.' % img_path
+        print >> sys.stderr, '> %s cannot be saved.' % img_url
         return
 
 
