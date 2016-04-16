@@ -3,22 +3,26 @@
 import os
 import requests
 from bs4 import BeautifulSoup
+from hashlib import md5
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
-# if any image is not expected to be saved, put it here
-IMG_BLACK_LIST = []
-
 # whether to remove the duplicated images
 IS_DEDUP = True
 
+# used for dealing with the duplicated images
+IMG_BLACK_LIST = []
+
+
+def get_md5(img_content):
+    m = md5()
+    m.update(img_content)
+    return m.hexdigest()
+
 
 def scrape_page_images(base_url, page_num, output_dir):
-
-    global IMG_BLACK_LIST
-    global IS_DEDUP
 
     print >> sys.stderr, 'Dealing with page %d...' % page_num
 
@@ -29,11 +33,8 @@ def scrape_page_images(base_url, page_num, output_dir):
     for img in soup.findAll('img'):
         try:
             img_url = img['original']
-            if img_url not in IMG_BLACK_LIST:
-                img_num += 1
-                img_list.append((page_num, img_num, img_url))
-                if IS_DEDUP:
-                    IMG_BLACK_LIST.append(img_url)
+            img_num += 1
+            img_list.append((page_num, img_num, img_url))
         except Exception as e:
             continue
 
@@ -49,16 +50,25 @@ def get_img_path(page_num, img_num, img_url, output_dir):
 
 
 def save_image(page_url, img_url, img_path):
+
+    global IS_DEDUP
+    global IMG_BLACK_LIST
+
     header = {
         'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;0.8',
         'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko)rome/41.0.2272.101 Safari/537.36',
         'Referer':'%s' % page_url
     }
     try:
-        with open(img_path, 'wb') as img:
-            img_content = requests.get(img_url, stream=True, headers=header).content
-            img.write(img_content)
-            return
+        img_content = requests.get(img_url, stream=True, headers=header).content
+        img_md5 = get_md5(img_content)
+        if img_md5 not in IMG_BLACK_LIST:
+            with open(img_path, 'wb') as img:
+                img.write(img_content)
+        if IS_DEDUP:
+            IMG_BLACK_LIST.append(img_md5)
+        return
+
     except Exception as e:
         print >> sys.stderr, '> %s cannot be saved.' % img_url
         return
