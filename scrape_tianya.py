@@ -8,7 +8,17 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
-def scrape_page_images(base_url, page_num, output_dir, img_black_list):
+# if any image is not expected to be saved, put it here
+IMG_BLACK_LIST = []
+
+# whether to remove the duplicated images
+IS_DEDUP = True
+
+
+def scrape_page_images(base_url, page_num, output_dir):
+
+    global IMG_BLACK_LIST
+    global IS_DEDUP
 
     print >> sys.stderr, 'Dealing with page %d...' % page_num
 
@@ -19,9 +29,11 @@ def scrape_page_images(base_url, page_num, output_dir, img_black_list):
     for img in soup.findAll('img'):
         try:
             img_url = img['original']
-            if img_url not in img_black_list:
+            if img_url not in IMG_BLACK_LIST:
                 img_num += 1
                 img_list.append((page_num, img_num, img_url))
+                if IS_DEDUP:
+                    IMG_BLACK_LIST.append(img_url)
         except Exception as e:
             continue
 
@@ -62,13 +74,10 @@ if __name__ == '__main__':
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    # if any image is not expected to be saved, put it here
-    img_black_list = []
-
     # the number of pages of the article
     max_page_num = 1000
 
     for i in range(max_page_num):
         page_num = i + 1
-        scrape_page_images(base_url, page_num, output_dir, img_black_list)
+        scrape_page_images(base_url, page_num, output_dir)
 
