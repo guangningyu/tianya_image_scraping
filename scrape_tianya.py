@@ -10,7 +10,7 @@ sys.setdefaultencoding('utf-8')
 
 def scrape_page_images(base_url, page_num, output_dir, img_black_list):
 
-    print '> Dealing with page %d...' % page_num
+    print 'Dealing with page %d...' % page_num
 
     page_url = base_url.format(str(page_num))
     soup = BeautifulSoup(requests.get(page_url).text, "lxml")
@@ -42,13 +42,13 @@ def save_image(page_url, img_url, img_path):
         'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko)rome/41.0.2272.101 Safari/537.36',
         'Referer':'%s' % page_url
     }
-    img_content = requests.get(img_url, stream=True, headers=header).content
     try:
         with open(img_path, 'wb') as img:
+            img_content = requests.get(img_url, stream=True, headers=header).content
             img.write(img_content)
             return
     except Exception as e:
-        print '%s cannot be saved.' % img_path
+        print '> %s cannot be saved.' % img_path
         return
 
 
